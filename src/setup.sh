@@ -1,6 +1,7 @@
 #! /bin/bash
 
 source ~/.bash_profile
+sudo /etc/init.d/postgresql start
 ./pg_init.sh
 
 cd ~/grano

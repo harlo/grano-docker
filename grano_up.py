@@ -2,7 +2,7 @@ import os, json
 from sys import argv, exit
 
 from dutils.conf import DUtilsKey, DUtilsKeyDefaults, build_config, BASE_DIR, append_to_config, save_config, __load_config
-from dutils.dutils import build_dockerfile
+from dutils.dutils import build_dockerfile, build_routine
 
 def init_grano(with_config):
 	conf_keys = [
@@ -15,7 +15,7 @@ def init_grano(with_config):
 	config = build_config(conf_keys, with_config)
 	config['USER'] = config['USER'].replace("-", "").replace("_", "")
 
-	from dutils.dutils import get_docker_exe, get_docker_ip, validate_private_key, build_bash_profile, build_routine
+	from dutils.dutils import get_docker_exe, get_docker_ip, validate_private_key, build_bash_profile
 
 	docker_exe = get_docker_exe()
 	if docker_exe is None:
@@ -67,6 +67,7 @@ def init_grano(with_config):
 
 
 def build_grano(with_config):
+	print "Step 2: build (config %s)" % with_config
 	res, config = append_to_config({'COMMIT_TO' : "grano_up"}, return_config=True, with_config=with_config)
 	
 	if not res:
@@ -88,10 +89,27 @@ def commit_grano(with_config):
 	if config is None:
 		return False
 
-	# you have to start up the thing to finish installation!?
-
 	from dutils.dutils import generate_run_routine, generate_shutdown_routine, finalize_assets
 	return (generate_run_routine(config, src_dirs=["grano"], with_config=with_config) and generate_shutdown_routine(config, with_config=with_config) and finalize_assets(with_config=with_config))
+
+def finish_grano(with_config):
+	try:
+		config = __load_config(with_config=with_config)
+	except Exception as e:
+		print "commit_grano Error:"
+		print e, type(e)
+
+	if config is None:
+		return False
+
+	# you have to start up the thing to finish installation!?
+	routine = [
+		"%(DOCKER_EXE)s run --name %(IMAGE_NAME)s -iPt %(IMAGE_NAME)s:latest ./setup.sh",
+		"%(DOCKER_EXE)s commit %(IMAGE_NAME)s %(IMAGE_NAME)s:latest",
+		"%(DOCKER_EXE)s rm %(IMAGE_NAME)s"
+	]
+
+	return build_routine([r % config for r in routine])
 
 def update_grano(with_config):
 	return build_dockerfile("Dockerfile.update", __load_config(with_config=with_config))
@@ -106,6 +124,8 @@ if __name__ == "__main__":
 		res = build_grano(with_config)
 	elif argv[1] == "commit":
 		res = commit_grano(with_config)
+	elif argv[1] == "finish":
+		res = finish_grano(with_config)
 	elif argv[1] == "update":
 		res = update_grano(with_config)
 	
