@@ -1,0 +1,4 @@
+FROM ${IMAGE_NAME}:latest
+MAINTAINER harlo <harlo.holmes@gmail.com>
+
+CMD ["/bin/bash", "./run.sh"]

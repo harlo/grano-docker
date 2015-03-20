@@ -1,0 +1,6 @@
+[submodule "dutils"]
+	path = dutils
+	url = git@github.com:harlo/dutils.git
+[submodule "src/grano"]
+	path = src/grano
+	url = git@github.com:pudo/grano.git

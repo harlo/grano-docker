@@ -1,0 +1,9 @@
+*.pyc
+*.sh
+Dockerfile
+venv/
+src/.ssh
+src/.bash_profile
+src/.pgpass
+
+!src/*.sh

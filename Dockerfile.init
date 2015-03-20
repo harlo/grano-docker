@@ -1,0 +1,29 @@
+FROM ubuntu:14.04
+MAINTAINER harlo <harlo.holmes@gmail.com>
+
+# UPDATE
+RUN apt-get update
+RUN apt-get install -yq wget zip unzip git openssl python-dev python-pip make openssh-server gcc g++ libxml2-dev libxslt-dev libpq-dev postgresql postgresql-contrib
+RUN pip install virtualenv
+
+# ADD OUR PRIMARY USER
+RUN useradd -ms /bin/bash -p $(openssl passwd -1 ${USER_PWD}) ${USER}
+RUN adduser ${USER} sudo
+
+# ADD FILES GALORE
+ADD src /home/${USER}/
+RUN chmod +x /home/${USER}/*.sh
+
+# SET UP USER STUFF
+RUN echo "${USER} ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+RUN chown -R ${USER}:${USER} /home/${USER}
+RUN chmod 0400 /home/${USER}/.pgpass
+
+USER ${USER}
+ENV HOME /home/${USER}
+WORKDIR /home/${USER}
+
+CMD ["/bin/bash", "./install.sh"]
+
+# PORTS FOR SSH, POSTGRES, CELERY
+EXPOSE 22 5432 5672
